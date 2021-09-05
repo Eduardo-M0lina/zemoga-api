@@ -3,6 +3,7 @@ package com.backend.apirest.model.handlers;
 import com.backend.apirest.model.dao.PortfolioDao;
 import com.backend.apirest.model.entity.Portfolio;
 import com.backend.apirest.model.services.PortfolioService;
+import com.backend.apirest.util.TwitterCredentials;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -10,14 +11,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import twitter4j.*;
+import twitter4j.api.TweetsResources;
+import twitter4j.conf.ConfigurationBuilder;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PortfolioHandler implements PortfolioService {
 
   @Autowired
   private PortfolioDao portfolioDao;
+
+  @Autowired
+  private TwitterCredentials twitterCredentials;
 
   @Override
   @Transactional(readOnly = true)
@@ -41,7 +49,39 @@ public class PortfolioHandler implements PortfolioService {
       response.put("message", "Porfolio with ID:".concat(id.toString().concat(" not found")));
       return new ResponseEntity<Map<String, Object>>(response, HttpStatus.NOT_FOUND);
     }
+    if (Objects.nonNull(portfolio.getTwitterUserName()))
+      portfolio.setTwStatus(getStatusTwitter(portfolio.getTwitterUserId(), portfolio.getTwitterUserName()));
+
     return new ResponseEntity<Portfolio>(portfolio, HttpStatus.OK);
+  }
+
+  private List<Status> getStatusTwitter(String userId, String userName) {
+
+    ConfigurationBuilder cb = new ConfigurationBuilder();
+    cb.setDebugEnabled(true)
+            .setOAuthConsumerKey(twitterCredentials.getConsumerKey())
+            .setOAuthConsumerSecret(twitterCredentials.getConsumerSecret())
+            .setOAuthAccessToken(twitterCredentials.getAccessToken())
+            .setOAuthAccessTokenSecret(twitterCredentials.getAccessTokenSecret());
+
+    TwitterFactory tf = new TwitterFactory(cb.build());
+
+    Twitter twitter = tf.getInstance();
+    List<Status> statusList = null;
+    try {
+      if (Objects.nonNull(userId))
+        statusList = twitter.getUserTimeline(Long.parseLong(userId));
+      if (Objects.isNull(statusList)) {
+        if (Objects.nonNull(userName)) {
+          User usuario = twitter.showUser(userName);
+          statusList = twitter.getUserTimeline(usuario.getId());
+        }
+      }
+    } catch (TwitterException e) {
+      e.printStackTrace();
+    }
+    List<Status> finalStatusList = statusList.stream().limit(5).collect(Collectors.toList());
+    return finalStatusList;
   }
 
   @Override

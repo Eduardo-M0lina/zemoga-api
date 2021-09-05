@@ -1,9 +1,11 @@
 package com.backend.apirest.model.entity;
 
 import lombok.Data;
+import twitter4j.Status;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 @Entity
@@ -34,6 +36,8 @@ public class Portfolio implements Serializable {
   private String twitterUserId;
   @Column(name = "twitter_user_name")
   private String twitterUserName;
+  @Transient
+  private List<Status> twStatus;
 
 
 }
