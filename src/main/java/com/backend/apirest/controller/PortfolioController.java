@@ -4,6 +4,7 @@ import com.backend.apirest.model.entity.Portfolio;
 import com.backend.apirest.model.services.PortfolioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,26 +23,23 @@ public class PortfolioController {
   }
 
   @GetMapping("/portfolio/{id}")
-  public Portfolio getPortfolio(@PathVariable Integer id){
+  public ResponseEntity<?> getPortfolio(@PathVariable Integer id){
     return service.findById(id);
   }
 
   @PostMapping("/portfolio")
-  @ResponseStatus(HttpStatus.CREATED)
-  public Portfolio create(@RequestBody Portfolio portfolio){
+  public ResponseEntity<?> create(@RequestBody Portfolio portfolio){
     return service.save(portfolio);
   }
 
   @PutMapping("/portfolio/{id}")
-  @ResponseStatus(HttpStatus.CREATED)
-  public Portfolio update(@RequestBody Portfolio portfolio, @PathVariable Integer id) throws Exception {
+  public ResponseEntity<?> update(@RequestBody Portfolio portfolio, @PathVariable Integer id) throws Exception {
     return service.update(portfolio,id);
   }
 
   @DeleteMapping("/portfolio/{id}")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void delete(@PathVariable Integer id){
-    service.delete(id);
+  public ResponseEntity<?> delete(@PathVariable Integer id){
+    return service.delete(id);
   }
 
 
