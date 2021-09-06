@@ -4,7 +4,6 @@ import com.backend.apirest.model.dao.PortfolioDao;
 import com.backend.apirest.model.entity.Portfolio;
 import com.backend.apirest.model.services.PortfolioService;
 import com.backend.apirest.util.TwitterCredentials;
-import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -12,10 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twitter4j.*;
-import twitter4j.api.TweetsResources;
 import twitter4j.conf.ConfigurationBuilder;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,9 +50,11 @@ public class PortfolioHandler implements PortfolioService {
       response.put("message", "Porfolio with ID:".concat(id.toString().concat(" not found")));
       return new ResponseEntity<Map<String, Object>>(response, HttpStatus.NOT_FOUND);
     }
-    if (Objects.nonNull(portfolio.getTwitterUserName()))
-      portfolio.setTwStatus(getStatusTwitter(portfolio.getTwitterUserId(), portfolio.getTwitterUserName()));
-
+    if (Objects.nonNull(portfolio.getTwitterUserId())||Objects.nonNull(portfolio.getTwitterUserName())) {
+      List<Status> statusList = getStatusTwitter(portfolio.getTwitterUserId(), portfolio.getTwitterUserName());
+      if(Objects.nonNull(statusList))
+        portfolio.setTwStatus(statusList);
+    }
     return new ResponseEntity<Portfolio>(portfolio, HttpStatus.OK);
   }
 
@@ -68,6 +71,7 @@ public class PortfolioHandler implements PortfolioService {
 
     Twitter twitter = tf.getInstance();
     List<Status> statusList = null;
+    List<Status> finalStatusList = null;
     try {
       if (Objects.nonNull(userId))
         statusList = twitter.getUserTimeline(Long.parseLong(userId));
@@ -78,9 +82,10 @@ public class PortfolioHandler implements PortfolioService {
         }
       }
     } catch (TwitterException e) {
-      e.printStackTrace();
+      e.getMessage();
     }
-    List<Status> finalStatusList = statusList.stream().limit(5).collect(Collectors.toList());
+    if(Objects.nonNull(statusList))
+      finalStatusList = statusList.stream().limit(5).collect(Collectors.toList());
     return finalStatusList;
   }
 

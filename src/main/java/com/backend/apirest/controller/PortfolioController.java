@@ -3,13 +3,12 @@ package com.backend.apirest.controller;
 import com.backend.apirest.model.entity.Portfolio;
 import com.backend.apirest.model.services.PortfolioService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-//@CrossOrigin(origins = {"http://localhost:4200"})
+@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("/api")
 public class PortfolioController {
@@ -17,7 +16,7 @@ public class PortfolioController {
   @Autowired
   private PortfolioService service;
 
-  @GetMapping("/portfolios")
+  @GetMapping("/portfolio")
   public List<Portfolio> listPortfolios(){
     return service.findAll();
   }
